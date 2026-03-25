@@ -10,11 +10,12 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(express.static("./public"));
 
 app.use("/api/v1/tasks", taskRoutes);
 
 app.get("/", (req, res) => {
-  res.send("Task Manager API");
+  res.sendFile(new URL("./public/index.html", import.meta.url).pathname);
 });
 
 const port = process.env.PORT || 3000;

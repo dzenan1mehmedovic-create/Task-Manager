@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="./css/main.css" />
+  </head>
+  <body>
+    <div class="container">
+      <form class="task-form">
+        <h3>Task Manager</h3>
+        <div class="form-control">
+          <input
+            type="text"
+            name="name"
+            class="task-input"
+            placeholder="e.g. wash dishes"
+          />
+          <button type="submit" class="btn submit-btn">Submit</button>
+        </div>
+        <div class="form-alert"></div>
+      </form>
+
+      <section class="tasks-container">
+        <div class="tasks"></div>
+      </section>
+    </div>
+
+    <script src="./js/browser-app.js"></script>
+  </body>
+</html>
