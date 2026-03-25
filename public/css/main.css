@@ -242,3 +242,14 @@ input {
   color: var(--grey-500);
   margin-top: 0.5rem;
 }
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  color: #645cff;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
