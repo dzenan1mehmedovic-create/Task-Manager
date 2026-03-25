@@ -2,6 +2,7 @@ const tasksDOM = document.querySelector(".tasks");
 const formDOM = document.querySelector(".task-form");
 const taskInputDOM = document.querySelector(".task-input");
 const formAlertDOM = document.querySelector(".form-alert");
+const submitBtnDOM = document.querySelector(".submit-btn");
 
 const showAlert = (text) => {
   formAlertDOM.textContent = text;
@@ -9,6 +10,13 @@ const showAlert = (text) => {
   setTimeout(() => {
     formAlertDOM.textContent = "";
   }, 2000);
+};
+
+const setSubmitLoading = (loading) => {
+  submitBtnDOM.disabled = loading;
+  submitBtnDOM.textContent = loading ? "Adding..." : "Submit";
+  submitBtnDOM.style.opacity = loading ? "0.7" : "1";
+  submitBtnDOM.style.cursor = loading ? "not-allowed" : "pointer";
 };
 
 const showTasks = async () => {
@@ -27,7 +35,11 @@ const showTasks = async () => {
         return `
           <div class="single-task">
             <div class="task-title">
-              <span class="task-complete-icon ${task.completed ? "completed" : ""}">
+              <span 
+                class="task-complete-icon ${task.completed ? "completed" : ""}" 
+                data-id="${task.id}" 
+                data-completed="${task.completed}"
+              >
                 ${task.completed ? "✓" : ""}
               </span>
               <p class="name ${task.completed ? "completed" : ""}">${task.name}</p>
@@ -60,6 +72,8 @@ formDOM.addEventListener("submit", async (e) => {
     return;
   }
 
+  setSubmitLoading(true);
+
   try {
     const response = await fetch("/api/v1/tasks", {
       method: "POST",
@@ -70,7 +84,7 @@ formDOM.addEventListener("submit", async (e) => {
     });
 
     if (!response.ok) {
-      throw new Error("Error creating task");
+      throw new Error();
     }
 
     taskInputDOM.value = "";
@@ -78,6 +92,8 @@ formDOM.addEventListener("submit", async (e) => {
     showTasks();
   } catch (error) {
     showAlert("Error, please try again");
+  } finally {
+    setSubmitLoading(false);
   }
 });
 
@@ -88,17 +104,46 @@ tasksDOM.addEventListener("click", async (e) => {
     const { id } = el.dataset;
 
     try {
+      el.disabled = true;
+      el.textContent = "Deleting...";
+
       const response = await fetch(`/api/v1/tasks/${id}`, {
         method: "DELETE",
       });
 
-      if (!response.ok) {
-        throw new Error("Error deleting task");
-      }
+      if (!response.ok) throw new Error();
 
       showTasks();
     } catch (error) {
-      showAlert("Error, please try again");
+      showAlert("Error deleting task");
+      el.disabled = false;
+      el.textContent = "Delete";
+    }
+  }
+
+  if (el.classList.contains("task-complete-icon")) {
+    const id = el.dataset.id;
+    const completed = el.dataset.completed === "true";
+
+    try {
+      el.style.pointerEvents = "none";
+
+      const response = await fetch(`/api/v1/tasks/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          completed: !completed,
+        }),
+      });
+
+      if (!response.ok) throw new Error();
+
+      showTasks();
+    } catch (error) {
+      showAlert("Error updating task");
+      el.style.pointerEvents = "auto";
     }
   }
 });
