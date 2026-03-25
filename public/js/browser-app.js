@@ -3,15 +3,22 @@ const formDOM = document.querySelector(".task-form");
 const taskInputDOM = document.querySelector(".task-input");
 const formAlertDOM = document.querySelector(".form-alert");
 
+const showAlert = (text) => {
+  formAlertDOM.textContent = text;
+
+  setTimeout(() => {
+    formAlertDOM.textContent = "";
+  }, 2000);
+};
+
 const showTasks = async () => {
   try {
     const response = await fetch("/api/v1/tasks");
     const data = await response.json();
-
     const { tasks } = data;
 
-    if (tasks.length < 1) {
-      tasksDOM.innerHTML = "<h5>No tasks in your list</h5>";
+    if (!tasks || tasks.length < 1) {
+      tasksDOM.innerHTML = `<p class="empty-list">No tasks in your list</p>`;
       return;
     }
 
@@ -20,9 +27,12 @@ const showTasks = async () => {
         return `
           <div class="single-task">
             <div class="task-title">
-              <input type="checkbox" ${task.completed ? "checked" : ""} disabled />
+              <span class="task-complete-icon ${task.completed ? "completed" : ""}">
+                ${task.completed ? "✓" : ""}
+              </span>
               <p class="name ${task.completed ? "completed" : ""}">${task.name}</p>
             </div>
+
             <div class="task-links">
               <a href="/edit-task.html?id=${task.id}" class="edit-link">Edit</a>
               <button type="button" class="delete-btn" data-id="${task.id}">Delete</button>
@@ -34,7 +44,7 @@ const showTasks = async () => {
 
     tasksDOM.innerHTML = allTasks;
   } catch (error) {
-    tasksDOM.innerHTML = "<h5>There was an error, please try later...</h5>";
+    tasksDOM.innerHTML = `<p class="empty-list">There was an error, please try later</p>`;
   }
 };
 
@@ -43,7 +53,12 @@ showTasks();
 formDOM.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const name = taskInputDOM.value;
+  const name = taskInputDOM.value.trim();
+
+  if (!name) {
+    showAlert("Please enter a task name");
+    return;
+  }
 
   try {
     const response = await fetch("/api/v1/tasks", {
@@ -59,17 +74,10 @@ formDOM.addEventListener("submit", async (e) => {
     }
 
     taskInputDOM.value = "";
-    formAlertDOM.textContent = "Task added successfully";
+    showAlert("Task added successfully");
     showTasks();
-
-    setTimeout(() => {
-      formAlertDOM.textContent = "";
-    }, 2000);
   } catch (error) {
-    formAlertDOM.textContent = "Error, please try again";
-    setTimeout(() => {
-      formAlertDOM.textContent = "";
-    }, 2000);
+    showAlert("Error, please try again");
   }
 });
 
@@ -77,7 +85,7 @@ tasksDOM.addEventListener("click", async (e) => {
   const el = e.target;
 
   if (el.classList.contains("delete-btn")) {
-    const id = el.dataset.id;
+    const { id } = el.dataset;
 
     try {
       const response = await fetch(`/api/v1/tasks/${id}`, {
@@ -90,10 +98,7 @@ tasksDOM.addEventListener("click", async (e) => {
 
       showTasks();
     } catch (error) {
-      formAlertDOM.textContent = "Error, please try again";
-      setTimeout(() => {
-        formAlertDOM.textContent = "";
-      }, 2000);
+      showAlert("Error, please try again");
     }
   }
 });
