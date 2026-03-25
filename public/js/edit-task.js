@@ -3,9 +3,25 @@ const taskNameDOM = document.querySelector(".task-edit-name");
 const taskCompletedDOM = document.querySelector(".task-edit-completed");
 const editFormDOM = document.querySelector(".single-task-form");
 const formAlertDOM = document.querySelector(".form-alert");
+const editBtnDOM = document.querySelector(".edit-task-btn");
 
 const params = window.location.search;
 const id = new URLSearchParams(params).get("id");
+
+const showAlert = (text) => {
+  formAlertDOM.textContent = text;
+
+  setTimeout(() => {
+    formAlertDOM.textContent = "";
+  }, 2000);
+};
+
+const setLoading = (loading) => {
+  editBtnDOM.disabled = loading;
+  editBtnDOM.textContent = loading ? "Saving..." : "Edit";
+  editBtnDOM.style.opacity = loading ? "0.7" : "1";
+  editBtnDOM.style.cursor = loading ? "not-allowed" : "pointer";
+};
 
 const loadTask = async () => {
   try {
@@ -18,7 +34,7 @@ const loadTask = async () => {
     taskNameDOM.value = task.name;
     taskCompletedDOM.checked = task.completed;
   } catch (error) {
-    formAlertDOM.textContent = "Error loading task";
+    showAlert("Error loading task");
   }
 };
 
@@ -27,8 +43,15 @@ loadTask();
 editFormDOM.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const name = taskNameDOM.value;
+  const name = taskNameDOM.value.trim();
   const completed = taskCompletedDOM.checked;
+
+  if (!name) {
+    showAlert("Name is required");
+    return;
+  }
+
+  setLoading(true);
 
   try {
     const response = await fetch(`/api/v1/tasks/${id}`, {
@@ -40,18 +63,17 @@ editFormDOM.addEventListener("submit", async (e) => {
     });
 
     if (!response.ok) {
-      throw new Error("Error updating task");
+      throw new Error();
     }
 
     formAlertDOM.textContent = "Task updated successfully";
 
     setTimeout(() => {
-      formAlertDOM.textContent = "";
-    }, 2000);
+      window.location.href = "/";
+    }, 1000);
   } catch (error) {
-    formAlertDOM.textContent = "Error, please try again";
-    setTimeout(() => {
-      formAlertDOM.textContent = "";
-    }, 2000);
+    showAlert("Error, please try again");
+  } finally {
+    setLoading(false);
   }
 });
